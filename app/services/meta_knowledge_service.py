@@ -1,13 +1,15 @@
 import uuid
 from pathlib import Path
 
-from langchain_huggingface import HuggingFaceEndpointEmbeddings
 from omegaconf import OmegaConf
 
+from app.clients.local_embedding_client import LocalEmbeddingClient
 from app.conf.meta_config import MetaConfig
 from app.core.log import logger
 from app.entities.column_info import ColumnInfo
 from app.entities.table_info import TableInfo
+from app.models.value_info import ValueInfo
+from app.reposities.es.value_es_repository import ValueEsRepository
 from app.reposities.mysql.dw.dw_mysql_repository import DwMsqlRepository
 from app.reposities.mysql.meta.meta_sql_repository import MetaSqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
@@ -17,11 +19,14 @@ class MateKnowledgeService:
     def __init__(self, meta_sql_repository: MetaSqlRepository
                  , dw_sql_repository: DwMsqlRepository
                  , column_qdrant_repository: ColumnQdrantRepository
-                 , embedding_client: HuggingFaceEndpointEmbeddings):
+                 , embedding_client: LocalEmbeddingClient
+                 , value_es_repository: ValueEsRepository
+                 ):
         self.column_qdrant_repository = column_qdrant_repository
         self.meta_sql_repository: MetaSqlRepository = meta_sql_repository
         self.dw_sql_repository: DwMsqlRepository = dw_sql_repository
-        self.embedding_client: HuggingFaceEndpointEmbeddings = embedding_client
+        self.embedding_client: LocalEmbeddingClient = embedding_client
+        self.value_es_repository = value_es_repository
 
     async def build(self, config_path: Path):
         logger.info(f"读取元知识库配置文件: {config_path}")
@@ -60,8 +65,8 @@ class MateKnowledgeService:
 
             # 保存表结构，使用自动提交事物，有异常自动会滚
             async with self.meta_sql_repository.session.begin():
-                self.meta_sql_repository.save_table_infos(table_infos)
-                self.meta_sql_repository.save_column_infos(column_infos)
+                await self.meta_sql_repository.save_table_infos(table_infos)
+                await self.meta_sql_repository.save_column_infos(column_infos)
 
             # 3 将关键字段信息进行向量化并存储到数据库
             await self.column_qdrant_repository.ensure_collection()
@@ -90,7 +95,7 @@ class MateKnowledgeService:
                     })
 
                 # 分批次进行向量化并保存
-                batch_points_size = 30
+                batch_points_size = 5
                 # 分批次地将embedding_text进行向量化
                 embeddings: list[list[float]] = []
                 for i in range(0, len(points), batch_points_size):
@@ -105,7 +110,25 @@ class MateKnowledgeService:
 
                 await self.column_qdrant_repository.upsert(ids, embeddings, payloads)
 
-                # 对维度字段信息创建全文索引并保存在es中
+            # 4 对维度字段信息创建全文索引并保存在es中
+            await self.value_es_repository.ensure_index()
+
+            target_value_infos: list[ValueInfo] = []
+            for table_info in meta_config.tables:
+                for column_info in table_info.columns:
+                    if column_info.sync:
+                        # 收集需要创建全文索引的值
+                        current_value_infos = await self.dw_sql_repository.get_column_examples(table_info.name,
+                                                                                               column_info.name,
+                                                                                               limit=9999999)
+                        value_infos = [ValueInfo(id=f"{table_info.name}.{column_info.name}.{current_value_info}",
+                                                 value=current_value_info,
+                                                 column_id=f"{table_info.name}.{column_info.name}"
+                                                 ) for current_value_info in current_value_infos]
+                        target_value_infos.extend(value_infos)
+
+            # 分批保存创建全文索引
+            await self.value_es_repository.batch_bulk_value_infos(target_value_infos)
 
         if meta_config.metrics:
             for metrics in meta_config.metrics:
