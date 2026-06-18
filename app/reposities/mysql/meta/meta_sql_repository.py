@@ -10,8 +10,8 @@ class MetaSqlRepository:
     def __init__(self, seesion: AsyncSession):
         self.session = seesion
 
-    async def save_table_infos(self, table_infos: list[TableInfo]):
+    def save_table_infos(self, table_infos: list[TableInfo]):
         self.session.add_all([TableInfoMapper.to_model(table_info) for table_info in table_infos])
 
-    async def save_column_infos(self, column_infos: list[ColumnInfo]):
+    def save_column_infos(self, column_infos: list[ColumnInfo]):
         self.session.add_all([ColumnInfoMapper.to_model(column_info) for column_info in column_infos])
