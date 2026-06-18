@@ -4,6 +4,8 @@ from omegaconf import OmegaConf
 
 from app.conf.meta_config import MetaConfig
 from app.core.log import logger
+from app.entities.column_info import ColumnInfo
+from app.entities.table_info import TableInfo
 from app.models.column_info import ColumnInfoMySQL
 from app.models.table_info import TableInfoMySQL
 from app.reposities.mysql.dw.dw_mysql_repository import DwMsqlRepository
@@ -33,11 +35,11 @@ class MateKnowledgeService:
 
         # 根据配置文件同步指定的元数据库和向量索引以及全文索引
         if meta_config.tables:
-            table_infos: list[TableInfoMySQL] = []
-            column_infos: list[ColumnInfoMySQL] = []
+            table_infos: list[TableInfo] = []
+            column_infos: list[ColumnInfo] = []
 
             for table in meta_config.tables:
-                table_info = TableInfoMySQL(id=table.name, name=table.name, role=table.role,
+                table_info = TableInfo(id=table.name, name=table.name, role=table.role,
                                             description=table.description)
                 table_infos.append(table_info)
 
@@ -48,18 +50,16 @@ class MateKnowledgeService:
                     # 查询字段取值示例
                     column_examples = await self.dw_sql_repository.get_column_examples(table.name, column.name)
 
-                    column_info = ColumnInfoMySQL(id=f"{table.name}.{column.name}", name=column.name,
+                    column_info = ColumnInfo(id=f"{table.name}.{column.name}", name=column.name,
                                                   type=column_types[column.name], role=column.role,
                                                   examples=column_examples, description=column.description,
                                                   alias=column.alias, table_id=table.name)
                     column_infos.append(column_info)
 
-            # 将表结构同步到meta数据库中
-            logger.info(table_infos)
-            logger.info("=" * 100)
-            logger.info(column_infos)
-            # self.meta_sql_repository.add_all(table_infos)
-
+            # 保存表结构，使用自动提交事物，有异常自动会滚
+            async with self.meta_sql_repository.session.begin():
+                self.meta_sql_repository.save_table_infos(table_infos)
+                self.meta_sql_repository.save_column_infos(column_infos)
             # 将关键字段信息进行向量化并存储到数据库
 
             # 对维度字段信息创建全文索引并保存在es中
