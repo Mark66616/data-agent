@@ -11,6 +11,7 @@ from app.reposities.es.value_es_repository import ValueEsRepository
 from app.reposities.mysql.dw.dw_mysql_repository import DwMsqlRepository
 from app.reposities.mysql.meta.meta_sql_repository import MetaSqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
+from app.reposities.qdrant.metric_qdrant_repository import MetricQdrantRepository
 from app.services.meta_knowledge_service import MateKnowledgeService
 
 
@@ -28,6 +29,7 @@ async def build(config_path: Path):
         dw_sql_repository = DwMsqlRepository(dw_session)
 
         column_qdrant_repository = ColumnQdrantRepository(qdrant_client_manager.client)
+        metric_qdrant_repository = MetricQdrantRepository(qdrant_client_manager.client)
         embedding_client = embedding_client_manager.client
         value_es_repository = ValueEsRepository(es_client_manager.client)
 
@@ -37,6 +39,7 @@ async def build(config_path: Path):
                                                       , column_qdrant_repository=column_qdrant_repository
                                                       , embedding_client=embedding_client
                                                       , value_es_repository=value_es_repository
+                                                      , metric_qdrant_repository=metric_qdrant_repository
                                                       )
         logger.info("元数据库构建方法开始执行")
         await meta_knowledge_service.build(config_path)
