@@ -20,7 +20,9 @@ class ValueEsRepository:
         self.es_client: AsyncElasticsearch = es_client
 
     async def ensure_index(self):
-        if not await self.es_client.exists(index=self.value_index_name):
+        #  es_client.exists() 是用来检查某个文档是否存在的方法，必须传 id 参数。
+        #  要检查索引是否存在，应该用 es_client.indices.exists(
+        if not await self.es_client.indices.exists(index=self.value_index_name):
             await self.es_client.indices.create(index=self.value_index_name,
                                                 mappings=self.index_mappings)
 
