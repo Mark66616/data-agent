@@ -55,7 +55,9 @@ graph = graph_builder.compile()
 # print(graph.get_graph().draw_ascii())
 if __name__ == '__main__':
     async def test():
-        async for chunk in graph.astream(input = DataAgentState(error=None), context=DataAgentContext(),stream_mode='custom'):
+        state = DataAgentState(user_query='统计华北地区当前季度销售排名前3明的商品',error=None)
+        context = DataAgentContext()
+        async for chunk in graph.astream(input = state, context=context,stream_mode='custom'):
             print(chunk)
 
     import asyncio
