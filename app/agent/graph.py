@@ -52,8 +52,13 @@ graph_builder.add_edge("execute_sql", END)
 
 graph = graph_builder.compile()
 
-print(graph.get_graph().draw_ascii())
+# print(graph.get_graph().draw_ascii())
+if __name__ == '__main__':
+    async def test():
+        async for chunk in graph.astream(input = DataAgentState(error=None), context=DataAgentContext(),stream_mode='custom'):
+            print(chunk)
 
-
+    import asyncio
+    asyncio.run(test())
 
 

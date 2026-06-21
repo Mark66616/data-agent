@@ -4,4 +4,6 @@ from app.agent.state import DataAgentState
 
 
 async def corrected_sql(state:DataAgentState,runtime:Runtime[DataAgentState]):
-    pass
+    writer = runtime.stream_writer
+    writer("校正SQL")
+    return {'error':None}

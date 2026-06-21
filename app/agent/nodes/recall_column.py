@@ -5,4 +5,5 @@ from app.agent.state import DataAgentState
 
 
 async def recall_column(state:DataAgentState,runtime:Runtime[DataAgentContext]):
-    pass
+    writer = runtime.stream_writer
+    writer("召回字段信息")

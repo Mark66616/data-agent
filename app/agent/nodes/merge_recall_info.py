@@ -5,4 +5,5 @@ from app.agent.state import DataAgentState
 
 
 async def merge_recall_info(state:DataAgentState,runtime:Runtime[DataAgentContext]):
-    pass
+    writer = runtime.stream_writer
+    writer("合并召回信息")

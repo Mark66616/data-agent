@@ -5,4 +5,5 @@ from app.agent.state import DataAgentState
 
 
 async def filter_table(state:DataAgentState,runtime:Runtime[DataAgentContext]):
-    pass
+    writer = runtime.stream_writer
+    writer("过滤表格信息")
