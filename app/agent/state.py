@@ -14,5 +14,8 @@ class DataAgentState(TypedDict):
     # 召回的指标信息
     recall_metrics: list[dict]
 
+    # 召回的值信息
+    recall_values: list[dict]
+
     # 校验SQL时出现的错误信息
     error: str
