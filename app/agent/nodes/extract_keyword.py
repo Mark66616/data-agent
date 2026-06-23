@@ -8,7 +8,7 @@ from app.core.log import logger
 
 async def extract_keyword(state: DataAgentState, runtime: Runtime[DataAgentContext]):
     writer = runtime.stream_writer
-    writer("抽取关键字")
+    writer({"type": "progress", "step": "抽取关键字", "status": "running"})
 
     # 用户查询
     user_query = state["user_query"]
@@ -37,6 +37,6 @@ async def extract_keyword(state: DataAgentState, runtime: Runtime[DataAgentConte
     # 去重是因为用户查询可能很短，抽取的关键词等于用户查询
     keywords = list(set(keywords + [user_query]))
 
+    writer({"type": "progress", "step": "抽取关键字", "status": "success"})
     logger.info(f"抽取的关键字: {keywords}")
-    writer(f"抽取的关键字: {keywords}")
     return {"keywords": keywords}

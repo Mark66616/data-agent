@@ -1,1 +1,9 @@
-Nothing needs to be added to .gitignore since only a README.md file was added, which is a source/config file and not a build artifact, dependency, or temporary file.
+/logs/app.log
+/.idea/inspectionProfiles/profiles_settings.xml
+/.idea/inspectionProfiles/Project_Default.xml
+/.idea/.gitignore
+/.idea/data-agent.iml
+/.idea/misc.xml
+/.idea/modules.xml
+/.idea/vcs.xml
+/docker/

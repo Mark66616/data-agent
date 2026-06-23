@@ -41,3 +41,20 @@ class ColumnQdrantRepository:
                             id, embedding, payload in
                             batch]
             await self.qdrant_client.upsert(collection_name=self.collection_name, points=batch_points)
+
+    async def search(self, embedding, limit: int = 5, score_threshold: float = 0.6) -> list[ColumnInfo]:
+        """
+        召回向量
+        :param embedding:召回关键词向量
+        :param limit: 召回限制top条数
+        :param score_threshold: 召回评分阈值
+        :return: 召回的payload信息
+        """
+        result = await self.qdrant_client.query_points(
+            collection_name=self.collection_name,
+            query_vector=embedding,
+            limit=limit,
+            score_threshold=score_threshold
+        )
+
+        return [ColumnInfo(**point.payload) for point in result.points]
