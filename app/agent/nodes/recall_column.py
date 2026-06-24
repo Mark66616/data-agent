@@ -59,7 +59,7 @@ async def recall_column(state: DataAgentState, runtime: Runtime[DataAgentContext
         recall_columns = list(recall_column_map.values())
 
         writer({"type": "progress", "step": "召回字段信息", "status": "success"})
-        logger.info(f"召回字段信息 - 召回的字段: {recall_columns}")
+        logger.info(f"召回字段信息 - 召回成功的字段: {recall_columns}")
         return {"recall_columns": recall_columns}
 
     except Exception as e:

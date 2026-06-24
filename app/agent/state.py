@@ -38,17 +38,15 @@ class DataAgentState(TypedDict):
 
     # 召回的列信息
     recall_columns: list[ColumnInfo]
-
     # 召回的指标信息
     recall_metrics: list[MetricInfo]
-
     # 召回的值信息
     recall_values: list[ValueInfo]
 
     # 合并的表信息
-    merge_tables: list[TableInfoState]
+    merge_table_infos: list[TableInfoState]
     # 合并的指标信息
-    merge_metrics: list[MetricInfoState]
+    merge_metric_infos: list[MetricInfoState]
 
     # 校验SQL时出现的错误信息
     error: str

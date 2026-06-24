@@ -52,7 +52,7 @@ async def recall_value(state: DataAgentState, runtime: Runtime[DataAgentContext]
         recall_values = list(values_map.values())
 
         writer({"type": "progress", "step": "召回值信息", "status": "success"})
-        logger.info(f"召回值信息 - 召回成功：{recall_values}")
+        logger.info(f"召回值信息 - 召回成功的值：{recall_values}")
 
         return {"recall_values": recall_values}
 
