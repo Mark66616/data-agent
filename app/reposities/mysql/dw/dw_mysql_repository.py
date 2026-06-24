@@ -1,6 +1,8 @@
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.agent.state import DbInfoState
+
 
 class DwMsqlRepository:
     def __init__(self, session: AsyncSession):
@@ -17,3 +19,19 @@ class DwMsqlRepository:
         sql = f"select distinct {column_name} from {table_name} limit {limit}"
         results = await self.session.execute(text(sql))
         return [result[0] for result in results.fetchall()]
+
+    async def get_db_info(self) -> DbInfoState:
+        result = await self.session.execute(text("select version()"))
+
+        version = result.scalar()
+
+        dialect = self.session.get_bind().dialect.name
+
+        return DbInfoState(dialect=dialect, version=version)
+
+    async def validate_sql(self, generated_sql):
+        await self.session.execute(text("explain " + generated_sql))
+
+    async def execute_sql(self, generated_sql:str) -> list[dict]:
+        result = await self.session.execute(text(generated_sql))
+        return [dict(row) for row in result.fetchall()]

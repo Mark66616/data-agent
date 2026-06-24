@@ -17,9 +17,10 @@ from app.agent.nodes.validate_sql import validate_sql
 from app.agent.state import DataAgentState
 from app.clients.embedding_client_manager import embedding_client_manager
 from app.clients.es_client_manager import es_client_manager
-from app.clients.mysql_client_manager import meta_mysql_client_manager
+from app.clients.mysql_client_manager import meta_mysql_client_manager, dw_mysql_client_manager
 from app.clients.qdrant_client_manager import qdrant_client_manager
 from app.reposities.es.value_es_repository import ValueEsRepository
+from app.reposities.mysql.dw.dw_mysql_repository import DwMsqlRepository
 from app.reposities.mysql.meta.meta_sql_repository import MetaMySqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
 from app.reposities.qdrant.metric_qdrant_repository import MetricQdrantRepository
@@ -68,9 +69,12 @@ if __name__ == '__main__':
         qdrant_client_manager.init()
         es_client_manager.init()
         meta_mysql_client_manager.init()
+        dw_mysql_client_manager.init()
 
-        async with meta_mysql_client_manager.session_factory() as meta_session:
+        async with (meta_mysql_client_manager.session_factory() as meta_session
+            , dw_mysql_client_manager.session_factory() as dw_session):
             meta_sql_repository = MetaMySqlRepository(meta_session)
+            dw_sql_repository = DwMsqlRepository(dw_session)
 
         embedding_client = embedding_client_manager.client
         column_qdrant_repository = ColumnQdrantRepository(qdrant_client_manager.client)
@@ -81,7 +85,8 @@ if __name__ == '__main__':
                                    column_qdrant_repository=column_qdrant_repository,
                                    metric_qdrant_repository=metric_qdrant_repository,
                                    value_es_repository=value_es_repository,
-                                   meta_sql_repository=meta_sql_repository
+                                   meta_sql_repository=meta_sql_repository,
+                                   dw_sql_repository=dw_sql_repository
                                    )
         async for chunk in graph.astream(input=state, context=context, stream_mode='custom'):
             print(chunk)

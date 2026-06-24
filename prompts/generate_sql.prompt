@@ -3,13 +3,13 @@
 
 【上下文信息】
 可用数据表信息如下：
-{table_infos}
+{filter_table_infos}
 
 可参考的指标信息如下：
-{metric_infos}
+{filter_metric_infos}
 
 当前的时间信息如下：
-{date_info}
+{current_date}
 
 数据库环境如下：
 {db_info}

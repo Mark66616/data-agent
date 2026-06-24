@@ -29,6 +29,22 @@ class MetricInfoState(TypedDict):
     relevant_columns: list[str]
     alias: list[str]
 
+@dataclass
+class CurrentDateState(TypedDict):
+    year: int
+    month: int
+    day: int
+    date: str
+    week_day:str
+    quarter: str
+
+@dataclass
+class DbInfoState(TypedDict):
+    # 数据库方言（具体数据库名，比如：mysql、redis、qdrant...）
+    dialect: str
+    # 数据库版本
+    version: str
+
 class DataAgentState(TypedDict):
     # 用户查询
     user_query: str
@@ -53,5 +69,17 @@ class DataAgentState(TypedDict):
     # 过滤后的指标信息
     filter_metric_infos: list[MetricInfoState]
 
+    # 添加额外的上下文
+    # 当前年月日季度
+    current_date: CurrentDateState
+    # 数据库信息
+    db_info: DbInfoState
+
+    # 生成和校正的SQL
+    generated_sql: str
+
     # 校验SQL时出现的错误信息
     error: str
+
+    # sql执行结果
+    sql_result: list[dict]
