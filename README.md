@@ -57,42 +57,51 @@
 │   │   ├── graph.py        # LangGraph 工作流定义
 │   │   ├── state.py        # Agent 状态定义
 │   │   ├── context.py      # Agent 上下文定义
+│   │   ├── llm.py          # LLM 客户端配置
 │   │   └── nodes/          # 工作流节点
-│   │       ├── extract_keyword.py
-│   │       ├── recall_column.py
-│   │       ├── recall_metric.py
-│   │       ├── recall_value.py
-│   │       ├── merge_recall_info.py
-│   │       ├── filter_table.py
-│   │       ├── filter_metric.py
-│   │       ├── add_context.py
-│   │       ├── generate_sql.py
-│   │       ├── validate_sql.py
-│   │       ├── corrected_sql.py
-│   │       └── execute_sql.py
+│   │       ├── extract_keyword.py    # 关键词抽取
+│   │       ├── recall_column.py      # 列召回
+│   │       ├── recall_metric.py      # 指标召回
+│   │       ├── recall_value.py       # 值召回
+│   │       ├── merge_recall_info.py  # 合并召回信息
+│   │       ├── filter_table.py       # 表过滤
+│   │       ├── filter_metric.py      # 指标过滤
+│   │       ├── add_context.py        # 上下文构建
+│   │       ├── generate_sql.py       # SQL 生成
+│   │       ├── validate_sql.py       # SQL 验证
+│   │       ├── corrected_sql.py      # SQL 修正
+│   │       └── execute_sql.py        # SQL 执行
 │   ├── clients/            # 客户端管理
-│   │   ├── mysql_client_manager.py
-│   │   ├── qdrant_client_manager.py
-│   │   ├── es_client_manager.py
-│   │   └── embedding_client_manager.py
+│   │   ├── mysql_client_manager.py   # MySQL 客户端
+│   │   ├── qdrant_client_manager.py  # Qdrant 客户端
+│   │   ├── es_client_manager.py      # Elasticsearch 客户端
+│   │   └── embedding_client_manager.py # Embedding 客户端
 │   ├── conf/               # 配置模块
-│   │   ├── app_config.py
-│   │   └── meta_config.py
+│   │   ├── app_config.py   # 应用配置加载
+│   │   └── meta_config.py  # 元数据配置加载
 │   ├── core/               # 核心工具
-│   │   └── log.py
+│   │   ├── log.py          # 日志工具
+│   │   └── lifespan.py     # FastAPI 生命周期管理
 │   ├── entities/           # 实体定义
-│   ├── models/             # 数据模型
+│   ├── models/             # 数据模型 (SQLAlchemy)
 │   ├── reposities/         # 数据仓库层
-│   │   ├── mysql/
-│   │   ├── qdrant/
-│   │   └── es/
+│   │   ├── mysql/          # MySQL 仓库
+│   │   │   ├── meta/       # 元数据仓库
+│   │   │   └── dw/         # 数仓仓库
+│   │   ├── qdrant/         # Qdrant 仓库
+│   │   └── es/             # Elasticsearch 仓库
 │   ├── scripts/            # 脚本工具
-│   │   └── build_meta_knowledge.py
+│   │   └── build_meta_knowledge.py  # 元知识库构建脚本
 │   └── services/           # 服务层
-│       └── meta_knowledge_service.py
-├── conf/                   # 配置文件
-│   ├── app_config.yaml     # 应用配置
-│   └── meta_config.yaml    # 元数据配置
+│       └── meta_knowledge_service.py # 元知识服务
+├── conf/                   # 配置文件目录
+│   ├── app_config.yaml     # 应用配置 (数据库、LLM 等)
+│   └── meta_config.yaml    # 元数据配置 (表、列、指标定义)
+├── prompts/                # Prompt 模板目录
+│   ├── generate_sql.prompt
+│   ├── validate_sql.prompt
+│   └── ...
+├── main.py                 # FastAPI 入口
 ├── pyproject.toml          # 项目依赖
 └── uv.lock                 # 依赖锁定文件
 ```
@@ -113,47 +122,14 @@ pip install -e .
 
 编辑 `conf/app_config.yaml` 配置以下服务:
 
-```yaml
-# MySQL 配置 (元数据库)
-db_meta:
-  host: localhost
-  port: 3306
-  user: your_user
-  password: your_password
-  database: meta
+- **MySQL 元数据库**: 存储表结构、列信息、指标定义等元数据
+- **MySQL 数仓**: 存储实际业务数据
+- **Qdrant 向量数据库**: 存储列和指标的向量嵌入
+- **Embedding 服务**: 提供文本向量化能力
+- **Elasticsearch**: 存储和检索值级别的元数据
+- **LLM 服务**: 用于 SQL 生成和修正
 
-# MySQL 配置 (数仓)
-db_dw:
-  host: localhost
-  port: 3306
-  user: your_user
-  password: your_password
-  database: dw
-
-# Qdrant 向量数据库配置
-qdrant:
-  host: localhost
-  port: 6333
-  embedding_size: 1024
-
-# Embedding 服务配置
-embedding:
-  host: localhost
-  port: 8081
-  model: BAAI/bge-large-zh-v1.5
-
-# Elasticsearch 配置
-es:
-  host: localhost
-  port: 9200
-  index_name: data_agent
-
-# LLM 配置
-llm:
-  model_name: gpt-5.2-codex
-  api_key: <your_api_key>
-  base_url: https://api.openai-proxy.org/v1
-```
+> ⚠️ **注意**: 请勿将真实的数据库密码、API Key 等敏感信息提交到版本控制系统。建议使用环境变量或本地配置文件覆盖默认设置。
 
 ### 构建元知识库
 
@@ -189,11 +165,18 @@ asyncio.run(query())
 
 ### 环境变量
 
-可以通过环境变量覆盖配置文件中的设置。
+可以通过环境变量覆盖配置文件中的设置。主要支持以下环境变量:
+
+- `DB_META_HOST`, `DB_META_PORT`, `DB_META_USER`, `DB_META_PASSWORD`, `DB_META_DATABASE`
+- `DB_DW_HOST`, `DB_DW_PORT`, `DB_DW_USER`, `DB_DW_PASSWORD`, `DB_DW_DATABASE`
+- `QDRANT_HOST`, `QDRANT_PORT`
+- `EMBEDDING_HOST`, `EMBEDDING_PORT`, `EMBEDDING_MODEL`
+- `ES_HOST`, `ES_PORT`, `ES_INDEX_NAME`
+- `LLM_MODEL_NAME`, `LLM_API_KEY`, `LLM_BASE_URL`
 
 ### 日志配置
 
-日志配置在 `app_config.yaml` 中:
+日志配置在 `app_config.yaml` 中，支持文件日志和控制台日志:
 
 ```yaml
 logging:
@@ -228,8 +211,9 @@ logging:
 
 - 确保所有外部服务 (MySQL, Qdrant, Elasticsearch, Embedding 服务) 已启动并可访问
 - 首次使用前必须运行 `build_meta_knowledge.py` 构建元知识库
-- 根据实际业务场景调整 `meta_config.yaml` 中的配置
+- 根据实际业务场景调整 `meta_config.yaml` 中的配置（表结构、列描述、指标定义等）
 - LLM API key 需要替换为有效的密钥
+- **安全提示**: 请勿将包含真实密码和密钥的配置文件提交到 Git，建议使用 `.gitignore` 忽略敏感配置文件或使用环境变量注入
 
 ## License
 
