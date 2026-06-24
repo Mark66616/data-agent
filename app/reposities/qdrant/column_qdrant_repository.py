@@ -52,7 +52,7 @@ class ColumnQdrantRepository:
         """
         result = await self.qdrant_client.query_points(
             collection_name=self.collection_name,
-            query_vector=embedding,
+            query=embedding,
             limit=limit,
             score_threshold=score_threshold
         )

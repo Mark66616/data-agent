@@ -17,8 +17,10 @@ from app.agent.nodes.validate_sql import validate_sql
 from app.agent.state import DataAgentState
 from app.clients.embedding_client_manager import embedding_client_manager
 from app.clients.es_client_manager import es_client_manager
+from app.clients.mysql_client_manager import meta_mysql_client_manager
 from app.clients.qdrant_client_manager import qdrant_client_manager
 from app.reposities.es.value_es_repository import ValueEsRepository
+from app.reposities.mysql.meta.meta_sql_repository import MetaSqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
 from app.reposities.qdrant.metric_qdrant_repository import MetricQdrantRepository
 
@@ -60,11 +62,15 @@ graph = graph_builder.compile()
 # print(graph.get_graph().draw_ascii())
 if __name__ == '__main__':
     async def test():
-        state = DataAgentState(user_query='统计华北地区当前季度销售排名前3名的商品', error=None)
+        state = DataAgentState(user_query='统计华北地区的销售总额', error=None)
 
         embedding_client_manager.init()
         qdrant_client_manager.init()
         es_client_manager.init()
+        meta_mysql_client_manager.init()
+
+        async with meta_mysql_client_manager.session_factory() as meta_session:
+            meta_sql_repository = MetaSqlRepository(meta_session)
 
         embedding_client = embedding_client_manager.client
         column_qdrant_repository = ColumnQdrantRepository(qdrant_client_manager.client)
@@ -74,7 +80,8 @@ if __name__ == '__main__':
         context = DataAgentContext(embedding_client=embedding_client,
                                    column_qdrant_repository=column_qdrant_repository,
                                    metric_qdrant_repository=metric_qdrant_repository,
-                                   value_es_repository=value_es_repository
+                                   value_es_repository=value_es_repository,
+                                   meta_sql_repository=meta_sql_repository
                                    )
         async for chunk in graph.astream(input=state, context=context, stream_mode='custom'):
             print(chunk)
