@@ -48,5 +48,10 @@ class DataAgentState(TypedDict):
     # 合并的指标信息
     merge_metric_infos: list[MetricInfoState]
 
+    # 过滤后的表信息
+    filter_table_infos: list[TableInfoState]
+    # 过滤后的指标信息
+    filter_metric_infos: list[MetricInfoState]
+
     # 校验SQL时出现的错误信息
     error: str
