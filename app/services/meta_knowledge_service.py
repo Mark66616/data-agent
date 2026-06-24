@@ -13,13 +13,13 @@ from app.entities.table_info import TableInfo
 from app.models.value_info import ValueInfo
 from app.reposities.es.value_es_repository import ValueEsRepository
 from app.reposities.mysql.dw.dw_mysql_repository import DwMsqlRepository
-from app.reposities.mysql.meta.meta_sql_repository import MetaSqlRepository
+from app.reposities.mysql.meta.meta_sql_repository import MetaMySqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
 from app.reposities.qdrant.metric_qdrant_repository import MetricQdrantRepository
 
 
 class MateKnowledgeService:
-    def __init__(self, meta_sql_repository: MetaSqlRepository
+    def __init__(self, meta_sql_repository: MetaMySqlRepository
                  , dw_sql_repository: DwMsqlRepository
                  , column_qdrant_repository: ColumnQdrantRepository
                  , embedding_client: LocalEmbeddingClient
@@ -27,7 +27,7 @@ class MateKnowledgeService:
                  , metric_qdrant_repository:MetricQdrantRepository
                  ):
         self.column_qdrant_repository = column_qdrant_repository
-        self.meta_sql_repository: MetaSqlRepository = meta_sql_repository
+        self.meta_sql_repository: MetaMySqlRepository = meta_sql_repository
         self.dw_sql_repository: DwMsqlRepository = dw_sql_repository
         self.embedding_client: LocalEmbeddingClient = embedding_client
         self.value_es_repository = value_es_repository

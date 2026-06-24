@@ -20,7 +20,7 @@ from app.clients.es_client_manager import es_client_manager
 from app.clients.mysql_client_manager import meta_mysql_client_manager
 from app.clients.qdrant_client_manager import qdrant_client_manager
 from app.reposities.es.value_es_repository import ValueEsRepository
-from app.reposities.mysql.meta.meta_sql_repository import MetaSqlRepository
+from app.reposities.mysql.meta.meta_sql_repository import MetaMySqlRepository
 from app.reposities.qdrant.column_qdrant_repository import ColumnQdrantRepository
 from app.reposities.qdrant.metric_qdrant_repository import MetricQdrantRepository
 
@@ -70,7 +70,7 @@ if __name__ == '__main__':
         meta_mysql_client_manager.init()
 
         async with meta_mysql_client_manager.session_factory() as meta_session:
-            meta_sql_repository = MetaSqlRepository(meta_session)
+            meta_sql_repository = MetaMySqlRepository(meta_session)
 
         embedding_client = embedding_client_manager.client
         column_qdrant_repository = ColumnQdrantRepository(qdrant_client_manager.client)

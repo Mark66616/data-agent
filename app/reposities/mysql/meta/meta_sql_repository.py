@@ -12,7 +12,7 @@ from app.reposities.mysql.meta.metric_info_mapper import MetricInfoMapper
 from app.reposities.mysql.meta.table_info_mapper import TableInfoMapper
 
 
-class MetaSqlRepository:
+class MetaMySqlRepository:
     def __init__(self, seesion: AsyncSession):
         self.session = seesion
 
